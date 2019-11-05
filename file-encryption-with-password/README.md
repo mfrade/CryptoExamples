@@ -47,8 +47,10 @@ dd if=/dev/urandom of=/tmp/bigfile.dat bs=4M count=16
     - `/tmp/bigfile.dat`
     - `/tmp/encrypted.dat`
     - `/tmp/decrypted.dat`
+
     Use the `sha256sum *.dat` command.
     Is the hash value of `/tmp/encrypted.dat` always the same?
 
-3. With an hex editor change only one byte of the `/tmp/encrypted.dat` file. Now, are you able to decrypt the edited file?
+3. With an hex editor change only one byte of the `/tmp/encrypted.dat` file. Are you able to decrypt the edited file?
 
+4. What was the *salt* value used to encrypt the file? Use an hex viewer to answer.
