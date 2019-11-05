@@ -1,20 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <sodium.h>
-#include <bsd/readpassphrase.h>  // sudo apt install libbsd-dev 
+#include <bsd/readpassphrase.h>
 
 #include "debug.h"
+#include "cmdline.h"
 
 #define CHUNK_SIZE 4096
 #define PASS_SIZE 1024
 
-// generate a random file:
-// dd if=/dev/urandom of=/tmp/bigfile.dat bs=4M count=16
-
-static int
-encrypt(const char *target_file, const char *source_file, const char *password)
-{
+// static int encrypt(const char *source_file, const char *target_file, const char *password){
+static int encrypt(FILE *fp_s, FILE *fp_t, const char *password){
     unsigned char  buf_in[CHUNK_SIZE];
     unsigned char  buf_out[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
     unsigned char  header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
@@ -22,14 +21,11 @@ encrypt(const char *target_file, const char *source_file, const char *password)
     unsigned char salt[crypto_pwhash_SALTBYTES];
     unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
     
-    FILE          *fp_t, *fp_s;
     unsigned long long out_len;
     size_t         rlen;
     int            eof;
     unsigned char  tag;
 
-    fp_s = fopen(source_file, "rb");
-    fp_t = fopen(target_file, "wb");
     
     randombytes_buf(salt, sizeof salt);
     
@@ -67,7 +63,7 @@ encrypt(const char *target_file, const char *source_file, const char *password)
 }
 
 static int
-decrypt(const char *target_file, const char *source_file, const char *password)
+decrypt(FILE *fp_s, FILE *fp_t, const char *password)
 {
     unsigned char  buf_in[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
     unsigned char  buf_out[CHUNK_SIZE];
@@ -76,15 +72,12 @@ decrypt(const char *target_file, const char *source_file, const char *password)
     unsigned char salt[crypto_pwhash_SALTBYTES];
     unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
     
-    FILE          *fp_t, *fp_s;
     unsigned long long out_len;
     size_t         rlen;
     int            eof;
     int            ret = -1;
     unsigned char  tag;
 
-    fp_s = fopen(source_file, "rb");
-    fp_t = fopen(target_file, "wb");
     
     fread(salt, 1, sizeof salt, fp_s);
     fread(header, 1, sizeof header, fp_s);
@@ -123,59 +116,75 @@ ret:
     return ret;
 }
 
-int
-main(void)
+int main(int argc, char **argv)
 {
-    char *password_enc, *password_dec;
+    struct gengetopt_args_info args_info;
+    char *password, *source_file, *target_file;
+    FILE *f_source, *f_target;
+    enum {MODE_NONE, MODE_ENCRYPT, MODE_DECRYPT} mode = MODE_NONE;
+    
 
+    // begin parse arguments
+        if (cmdline_parser(argc, argv, &args_info) != 0) {
+            ERROR(1, "cmdline_parser");
+        }
+        
+        source_file=args_info.source_arg;
+        target_file=args_info.target_arg;
+        
+        if(args_info.encrypt_given)
+            mode = MODE_ENCRYPT;
+        if(args_info.decrypt_given)
+            mode = MODE_DECRYPT;
+    // end parse arguments
+    
+        
+    f_source = fopen(source_file, "rb");
+    if(f_source == NULL){
+        ERROR(1, "Open file \'%s\'", source_file);
+    }
+    
+    f_target = fopen(target_file, "wb");
+    if(f_target == NULL){
+        ERROR(1, "Open file \'%s\'", target_file);
+    }
+    
     if (sodium_init() != 0) {
         ERROR(1, "Sodium init");
     }
     
-    
-    password_enc = sodium_malloc(PASS_SIZE + 1);
-    if (!password_enc) {
+    password = sodium_malloc(PASS_SIZE + 1);
+    if (!password) {
          ERROR(1, "Memory error");
     }
-    
-    password_dec = sodium_malloc(PASS_SIZE + 1);
-    if (!password_dec) {
-        ERROR(1, "Memory error");
-    }
-    
-    
-    
-    if (readpassphrase("Pass phrase to encrypt: ", password_enc, PASS_SIZE, RPP_REQUIRE_TTY) == NULL){
+    if (readpassphrase("Pass phrase to encrypt: ", password, PASS_SIZE, RPP_REQUIRE_TTY) == NULL){
         ERROR(1, "Unable to read passphrase");
     }
     
 #ifdef SHOW_DEBUG    
-    DEBUG("Pass phrase to encrypt: \'%s\'\n", password_enc);
+    DEBUG("Pass phrase to encrypt: \'%s\'\n", password);
 #endif
             
     
     //     crypto_secretstream_xchacha20poly1305_keygen(key);
-    //     problem: How to reproduce the key?
-    //     this option seems very good for key encapsulation mechanism
-    
-    if (encrypt("/tmp/encrypted.dat", "/tmp/bigfile.dat", password_enc) != 0) {
-        ERROR(1, "Not able to encrypt");
-    }
-    
-//     sprintf(wrong_password, "%s%s", password, "?");
-    if (readpassphrase("Pass phrase to decrypt: ", password_dec, PASS_SIZE, RPP_REQUIRE_TTY) == NULL){
-        ERROR(1, "Unable to read passphrase");
-    }
+    //     this option is good for key encapsulation mechanism where there's no need to store the salt
     
     
-#ifdef SHOW_DEBUG
-    DEBUG("Pass phrase to decrypt: \'%s\'\n", password_dec);
-#endif
-    
-    if (decrypt("/tmp/decrypted.dat", "/tmp/encrypted.dat", password_dec) != 0) {
-        ERROR(1, "Not able to decrypt. Wrong password?");
-    }
-    
+    switch (mode) {
+        case MODE_ENCRYPT:
+            if (encrypt(f_source, f_target, password) != 0) {
+                ERROR(1, "Not able to encrypt");
+            }
+            break;
+        case MODE_DECRYPT:
+            if (decrypt(f_source, f_target, password) != 0) {
+                ERROR(1, "Not able to decrypt. Wrong password?");
+            }
+            break;
+        default:
+            ERROR(1, "Operation unknown");
+        }
+
     
     return 0;
 }

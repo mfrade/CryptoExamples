@@ -1,0 +1,11 @@
+package "file-encryption"
+version "0.0.1"
+purpose "Encrypt and decrypt a large file and protect it with a user inserted password."
+description "The key is generated from the password with Argon2 and Authenticated Encryption (AE) is used to guarantee the authenticity of the file contents."
+
+defgroup "operation" groupdesc="Only one operation can be defined:" required
+groupoption "encrypt" e "encrypt operation" group="operation"
+groupoption "decrypt" d "decrypt operation" group="operation"
+section "Required parameters"
+option "source" s "Source filename" string typestr="filename" required
+option "target" t "Target filename" string typestr="filename" required
