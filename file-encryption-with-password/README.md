@@ -40,3 +40,15 @@ dd if=/dev/urandom of=/tmp/bigfile.dat bs=4M count=16
 2. `./file-encryption`
 
 
+## Questions
+1. What happens if an incorrect password is used to decrypt the file?
+
+2. Encrypt the same file multiple times with the **same** password and check the hash values of:
+    - `/tmp/bigfile.dat`
+    - `/tmp/encrypted.dat`
+    - `/tmp/decrypted.dat`
+    Use the `sha256sum *.dat` command.
+    Is the hash value of `/tmp/encrypted.dat` always the same?
+
+3. With an hex editor change only one byte of the `/tmp/encrypted.dat` file. Now, are you able to decrypt the edited file?
+
