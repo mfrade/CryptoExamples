@@ -4,12 +4,14 @@ Based on the code available on [Libsodium documentation](https://libsodium.gitbo
 
 ## Description
 
-This example program will:
+This program will:
 1. ask the user for a password and then encrypt the file `/tmp/bigfile.dat` and save the result to `/tmp/encrypted.dat`
 2. ask the user for a password to decrypt the file `/tmp/bigfile.dat` to `/tmp/decrypted.dat`. If the password is incorrect, the decryption will fail.
 
 To generate a random file do (change the `count` and/or `bs` values to increase file size):
-`dd if=/dev/urandom of=/tmp/bigfile.dat bs=4M count=16`
+```
+dd if=/dev/urandom of=/tmp/bigfile.dat bs=4M count=16
+```
 
 The function `sodium_malloc()` is used to allocate and protect the memory to store the clear text password. 
 To read the user input `readpassphrase()` is used to guarantee that the password is not displayed on the terminal. 
@@ -24,7 +26,9 @@ Depends on:
 - `libbsd-dev`
 
 On ubuntu do:
-`sudo apt install libsodium-dev libbsd-dev`
+```
+sudo apt install libsodium-dev libbsd-dev
+```
 
 To disable debug info, comment out `-D SHOW_DEBUG` on the `Makefile`
 
