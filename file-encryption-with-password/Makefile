@@ -6,7 +6,7 @@ IFLAGS = -kr -cli4
 ARGS = args
 PROGRAM = file-encryption
 
-all: debug.o ${PROGRAM}
+all: ${PROGRAM}
 
 ${PROGRAM}: debug.o cmdline.o ${PROGRAM}.o
 	${CC} ${CFLAGS} -o ${PROGRAM} debug.o cmdline.o ${PROGRAM}.o ${LIBS}

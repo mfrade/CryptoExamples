@@ -18,12 +18,11 @@ This program is based on code available on [Libsodium documentation](https://lib
 Depends on:
 - `libsodium-dev` for the encryption algorithms
 - `libbsd-dev` to read passwords from the terminal
-- `libpopt-dev` to parse the arguments
 - `gengetopt` to parse the command line arguments
 
 On ubuntu do:
 ```
-sudo apt install libsodium-dev libbsd-dev libpopt-dev gengetopt
+sudo apt install libsodium-dev libbsd-dev gengetopt
 ```
 
 To disable debug info, comment out `-D SHOW_DEBUG` on the `Makefile`
