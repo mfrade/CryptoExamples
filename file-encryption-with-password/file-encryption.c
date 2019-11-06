@@ -12,7 +12,6 @@
 #define CHUNK_SIZE 4096
 #define PASS_SIZE 1024
 
-// static int encrypt(const char *source_file, const char *target_file, const char *password){
 static int encrypt(FILE *fp_s, FILE *fp_t, const char *password){
     unsigned char  buf_in[CHUNK_SIZE];
     unsigned char  buf_out[CHUNK_SIZE + crypto_secretstream_xchacha20poly1305_ABYTES];
@@ -52,12 +51,12 @@ static int encrypt(FILE *fp_s, FILE *fp_t, const char *password){
         
         crypto_secretstream_xchacha20poly1305_push(&st, buf_out, &out_len, buf_in, rlen, NULL, 0, tag);
         
-        fwrite(buf_out, 1, (size_t) out_len, fp_t);
+        if (fwrite(buf_out, 1, (size_t) out_len, fp_t)==0 && !eof){
+            ERROR(1, "Writing to file");
+        }
         
     } while (! eof);
     
-    fclose(fp_t);
-    fclose(fp_s);
     
     return 0;
 }
@@ -94,25 +93,26 @@ decrypt(FILE *fp_s, FILE *fp_t, const char *password)
     sodium_free((void *)password);
     
     if (crypto_secretstream_xchacha20poly1305_init_pull(&st, header, key) != 0) {
-        goto ret; /* incomplete header */
+        return ret; /* incomplete header */
     }
     do {
         rlen = fread(buf_in, 1, sizeof buf_in, fp_s);
         eof = feof(fp_s);
         if (crypto_secretstream_xchacha20poly1305_pull(&st, buf_out, &out_len, &tag,
                                                        buf_in, rlen, NULL, 0) != 0) {
-            goto ret; /* corrupted chunk */
+            return ret; /* corrupted chunk */
         }
         if (tag == crypto_secretstream_xchacha20poly1305_TAG_FINAL && ! eof) {
-            goto ret; /* premature end (end of file reached before the end of the stream) */
+            return ret; /* premature end (end of file reached before the end of the stream) */
         }
-        fwrite(buf_out, 1, (size_t) out_len, fp_t);
+        
+        if (fwrite(buf_out, 1, (size_t) out_len, fp_t)==0 && !eof){
+            ERROR(1, "Writing to file");
+        }
     } while (! eof);
 
+    /* every thing is ok*/
     ret = 0;
-ret:
-    fclose(fp_t);
-    fclose(fp_s);
     return ret;
 }
 
@@ -124,21 +124,25 @@ int main(int argc, char **argv)
     enum {MODE_NONE, MODE_ENCRYPT, MODE_DECRYPT} mode = MODE_NONE;
     
 
-    // begin parse arguments
-        if (cmdline_parser(argc, argv, &args_info) != 0) {
-            ERROR(1, "cmdline_parser");
-        }
-        
-        source_file=args_info.source_arg;
-        target_file=args_info.target_arg;
-        
-        if(args_info.encrypt_given)
-            mode = MODE_ENCRYPT;
-        if(args_info.decrypt_given)
-            mode = MODE_DECRYPT;
-    // end parse arguments
+    /*
+     * parse command line arguments
+     */
+    if (cmdline_parser(argc, argv, &args_info) != 0) {
+        ERROR(1, "cmdline_parser");
+    }
     
-        
+    source_file=args_info.source_arg;
+    target_file=args_info.target_arg;
+    
+    if(args_info.encrypt_given)
+        mode = MODE_ENCRYPT;
+    if(args_info.decrypt_given)
+        mode = MODE_DECRYPT;
+    
+    /*
+     * prepare files
+     */
+    
     f_source = fopen(source_file, "rb");
     if(f_source == NULL){
         ERROR(1, "Open file \'%s\'", source_file);
@@ -149,6 +153,10 @@ int main(int argc, char **argv)
         ERROR(1, "Open file \'%s\'", target_file);
     }
     
+    
+    /*
+     * initialize libsodium
+     */
     if (sodium_init() != 0) {
         ERROR(1, "Sodium init");
     }
@@ -170,6 +178,9 @@ int main(int argc, char **argv)
     //     this option is good for key encapsulation mechanism where there's no need to store the salt
     
     
+    /*
+     * encrypt or decrypt
+     */
     switch (mode) {
         case MODE_ENCRYPT:
             if (encrypt(f_source, f_target, password) != 0) {
@@ -185,6 +196,7 @@ int main(int argc, char **argv)
             ERROR(1, "Operation unknown");
         }
 
-    
+    fclose(f_source);
+    fclose(f_target);
     return 0;
 }
