@@ -55,7 +55,9 @@ static int encrypt(FILE *fp_s, FILE *fp_t, const char *password){
     crypto_secretstream_xchacha20poly1305_init_push(&st, sh.header, key);
     
     
-    fwrite((void *)&sh, 1, sizeof sh, fp_t);
+    if(fwrite((void *)&sh, 1, sizeof sh, fp_t)==0){
+        ERROR(1, "Writing the salt and headre to the target file");
+    }
     
     do {
         rlen = fread(buf_in, 1, sizeof buf_in, fp_s);
@@ -95,7 +97,7 @@ decrypt(FILE *fp_s, FILE *fp_t, const char *password)
     
     // read the salt and the header from the file
     if(fread((void *)&sh, 1, sizeof sh, fp_s)==0){
-        ERROR(1, "Reading source file");
+        ERROR(1, "Reading salt and headre from source file");
     }
     
     if (crypto_pwhash(key, sizeof key, password, strlen(password), sh.salt, 
@@ -140,25 +142,23 @@ int main(int argc, char **argv)
     enum {MODE_NONE, MODE_ENCRYPT, MODE_DECRYPT} mode = MODE_NONE;
     
 
-    /*
-     * parse command line arguments
-     */
+    
+    // parse command line arguments
     if (cmdline_parser(argc, argv, &args_info) != 0) {
         ERROR(1, "cmdline_parser");
     }
     
+    // get file names
     source_file=args_info.source_arg;
     target_file=args_info.target_arg;
+    
     
     if(args_info.encrypt_given)
         mode = MODE_ENCRYPT;
     if(args_info.decrypt_given)
         mode = MODE_DECRYPT;
     
-    /*
-     * prepare files
-     */
-    
+    // open files
     f_source = fopen(source_file, "rb");
     if(f_source == NULL){
         ERROR(1, "Open file \'%s\'", source_file);
@@ -170,9 +170,8 @@ int main(int argc, char **argv)
     }
     
     
-    /*
-     * initialize libsodium
-     */
+    
+    // initialize libsodium
     if (sodium_init() != 0) {
         ERROR(1, "Sodium init");
     }
@@ -181,12 +180,14 @@ int main(int argc, char **argv)
     if (!password) {
          ERROR(1, "Memory error");
     }
+    
+    // securely read password, or passphrase, from terminal
     if (readpassphrase("Pass phrase to encrypt: ", password, PASS_SIZE, RPP_REQUIRE_TTY) == NULL){
         ERROR(1, "Unable to read passphrase");
     }
     
 #ifdef SHOW_DEBUG    
-    DEBUG("Pass phrase to encrypt: \'%s\'\n", password);
+    DEBUG("Pass phrase entered: \'%s\'\n", password);
 #endif
             
     
@@ -194,9 +195,7 @@ int main(int argc, char **argv)
     //     this option is good for key encapsulation mechanism where there's no need to store the salt
     
     
-    /*
-     * encrypt or decrypt
-     */
+    
     switch (mode) {
         case MODE_ENCRYPT:
             if (encrypt(f_source, f_target, password) != 0) {
@@ -209,7 +208,7 @@ int main(int argc, char **argv)
             }
             break;
         default:
-            ERROR(1, "Operation unknown");
+            ERROR(1, "Unknown operation");
         }
     
     fclose(f_source);
