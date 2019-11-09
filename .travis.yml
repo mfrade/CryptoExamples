@@ -1,0 +1,23 @@
+language: c
+compiler:
+  - gcc
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "fQspFAeNVBc3c5QyFnFJ734+uKWIMKCwUXB8H1kd+J1Owl5pTIesvhgDoG3tQuzrCoqdPhuKMDuySIXeZTnVvCDN6wo4qqmdyRjPuPp0IcWDyM1wjHU9kl2PX3PnbebAX8oSCWJuqcXo4J4fMTbodE0aKBQjJ+2NzBopUAzF9SE="
+
+before_install:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+addons:
+  coverity_scan:
+    project:
+      name: "mfrade/CryptoExamples"
+      description: "Simple, yet close to real world situations, C code examples to show the usage of the Libsodium cryptographic library."
+    notification_email: miguel.frade@ipleiria.pt
+    build_command_prepend: ""
+    build_command: "make"
+    #branch_pattern: coverity_scan
+    branch_pattern: master
