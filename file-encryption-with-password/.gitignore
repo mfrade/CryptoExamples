@@ -1,2 +1,4 @@
 file-encryption
 cov-int/
+cmdline.c
+cmdline.h
