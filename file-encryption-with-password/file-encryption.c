@@ -9,11 +9,18 @@
 #include "debug.h"
 #include "cmdline.h"
 
-// #define CHUNK_SIZE 4096
-#define CHUNK_SIZE 16384
+/**
+ * CHUNK_SIZE = 16 kB, because it's the max limit with AES-GCM
+ * although xchacha20poly1305 doesn't have that limit
+ */
+#define CHUNK_SIZE 16384    
 #define PASS_SIZE 1024
 
-struct salt_header_struct {
+/**
+ * @brief struct added_data_struct is a structure to include the data that we want
+ * to authenticate, but not encrypted, such as version info.
+ */
+struct added_data_struct {
     unsigned char salt[crypto_pwhash_SALTBYTES];
     unsigned char header[crypto_secretstream_xchacha20poly1305_HEADERBYTES];
 };
@@ -24,7 +31,7 @@ static int encrypt(FILE *fp_s, FILE *fp_t, const char *password){
     unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
     crypto_secretstream_xchacha20poly1305_state st;
     
-    struct salt_header_struct sh;
+    struct added_data_struct sh;
     
     unsigned long long out_len;
     size_t         rlen;
@@ -76,7 +83,7 @@ decrypt(FILE *fp_s, FILE *fp_t, const char *password)
     unsigned char key[crypto_secretstream_xchacha20poly1305_KEYBYTES];
     crypto_secretstream_xchacha20poly1305_state st;
     
-    struct salt_header_struct sh;
+    struct added_data_struct sh;
     
     unsigned long long out_len;
     size_t         rlen;
@@ -86,8 +93,10 @@ decrypt(FILE *fp_s, FILE *fp_t, const char *password)
 
     
     
-    // read from the file the salt and the header
-    fread((void *)&sh, 1, sizeof sh, fp_s);
+    // read the salt and the header from the file
+    if(fread((void *)&sh, 1, sizeof sh, fp_s)==0){
+        ERROR(1, "Reading source file");
+    }
     
     if (crypto_pwhash(key, sizeof key, password, strlen(password), sh.salt, 
             crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, 
@@ -202,7 +211,7 @@ int main(int argc, char **argv)
         default:
             ERROR(1, "Operation unknown");
         }
-
+    
     fclose(f_source);
     fclose(f_target);
     return 0;

@@ -1,3 +1,4 @@
 cmdline.c
 cmdline.h
 file-encryption
+cov-int/
