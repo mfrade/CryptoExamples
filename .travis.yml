@@ -1,9 +1,9 @@
 language: c
 compiler:
-  - gcc
+    - gcc
 
 env:
-  global:
+    global:
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
     # via the "travis encrypt" command using the project repo's public key
     #
@@ -22,21 +22,24 @@ env:
     #       where <token> is the "Project Token" found on the coverity web page:
     #       https://scan.coverity.com/dashboard -> <you>/<proj> -> Project_settings
     #   e.g.:
-    #   % travis encrypt  -r mfrade/CryptoExamples encrypt  COVERITY_SCAN_TOKEN="<token>"
-    # The output string, about 700 characters long, should placed below:
+    #   % travis encrypt  -r mfrade/CryptoExamples encrypt  COVERITY_SCAN_TOKEN="xxxxxx"
+    # The output string, about 700 characters long, should be placed below:
    
-   - secure: "fpZYVz79O9yC78u6wcX0WZ1KC7b8qIokaxw/f/5idn7Aq+jpnudpWljXAkDLw1VxVkM8AOJOIR7pbZMgzo2Ffe80aa3fYz5EUyHJmYsebjI4zpsWwmieR5wp0mFB9WiXVLmwiDg5xrNI3MA2aQACVFNt2oj2CPdR1dkOt4Vbh6IZQDotyt1xUEwMyjz3xQjC18CRPHnBZ5pgS9hfoA4u5yJcrPcgN71KvOy/hvY7Oz9Ajz4TOUzNNCSLZkD0VJ7xOD0NOhgLL+eU4Cxv42jS0SoRHUkIkJDkc/bUsmbjRdEVt7DsJQr2V3svLhS3hNZ70T3TXJ72SgGMCtuMWhbQri2rWsByRuK0ZD2xQ55cGou5obOknKnA1Oe14is12XGzWLoFbZWbIrNsi4b/nPRRYDxsxW/7yOWWwiCMJTDzrkzdpscX2hB0GEGmGKWkh0wztvAbCk2DZmKmcH1KpigPDwGsnAMLzlCUW3taxYaTL95eQQ1/hd/EW5DCVsbEpXSrmbJzlfN0DGWTe/IVCYJTzYA+7rLBwY3hNTaguq08S5N+g7MZXquv8CArHmfW3lAF6uJ9ml7lLzOEFw9vaaMshPnGcuHuO+W9fJ3B/uTERnXZZPvlOpic7M4UsYtvvcha/J3LveKfNG7LImr+gc0W++g6Vaetf6H+IwR6FGne/vo="
+    - secure: "fpZYVz79O9yC78u6wcX0WZ1KC7b8qIokaxw/f/5idn7Aq+jpnudpWljXAkDLw1VxVkM8AOJOIR7pbZMgzo2Ffe80aa3fYz5EUyHJmYsebjI4zpsWwmieR5wp0mFB9WiXVLmwiDg5xrNI3MA2aQACVFNt2oj2CPdR1dkOt4Vbh6IZQDotyt1xUEwMyjz3xQjC18CRPHnBZ5pgS9hfoA4u5yJcrPcgN71KvOy/hvY7Oz9Ajz4TOUzNNCSLZkD0VJ7xOD0NOhgLL+eU4Cxv42jS0SoRHUkIkJDkc/bUsmbjRdEVt7DsJQr2V3svLhS3hNZ70T3TXJ72SgGMCtuMWhbQri2rWsByRuK0ZD2xQ55cGou5obOknKnA1Oe14is12XGzWLoFbZWbIrNsi4b/nPRRYDxsxW/7yOWWwiCMJTDzrkzdpscX2hB0GEGmGKWkh0wztvAbCk2DZmKmcH1KpigPDwGsnAMLzlCUW3taxYaTL95eQQ1/hd/EW5DCVsbEpXSrmbJzlfN0DGWTe/IVCYJTzYA+7rLBwY3hNTaguq08S5N+g7MZXquv8CArHmfW3lAF6uJ9ml7lLzOEFw9vaaMshPnGcuHuO+W9fJ3B/uTERnXZZPvlOpic7M4UsYtvvcha/J3LveKfNG7LImr+gc0W++g6Vaetf6H+IwR6FGne/vo="
 
 before_install:
-  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 
 addons:
-  coverity_scan:
-    project:
-      name: "mfrade/CryptoExamples"
-      description: "Simple, yet close to real world situations, C code examples to show the usage of the Libsodium cryptographic library."
-    notification_email: miguel.frade@ipleiria.pt
-    build_command_prepend: ""
-    build_command: "make"
-    #branch_pattern: coverity_scan
-    branch_pattern: master
+    coverity_scan:
+        project:
+            name: "mfrade/CryptoExamples"
+            description: "Simple, yet close to real world situations, C code examples to show the usage of the Libsodium cryptographic library."
+        notification_email: miguel.frade@ipleiria.pt
+        build_command_prepend: ""
+        build_command: "make"
+        #branch_pattern: coverity_scan
+        branch_pattern: master
+
+script:
+    - make
