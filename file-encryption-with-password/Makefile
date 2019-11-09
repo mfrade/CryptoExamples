@@ -34,5 +34,5 @@ indent:
 
 clean:
 	rm -f *.o core ${PROGRAM} *~
-	rm -f -R html cmdline.*
+	rm -f -R html
 
