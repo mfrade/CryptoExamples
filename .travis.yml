@@ -4,9 +4,28 @@ compiler:
 
 env:
   global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "fQspFAeNVBc3c5QyFnFJ734+uKWIMKCwUXB8H1kd+J1Owl5pTIesvhgDoG3tQuzrCoqdPhuKMDuySIXeZTnVvCDN6wo4qqmdyRjPuPp0IcWDyM1wjHU9kl2PX3PnbebAX8oSCWJuqcXo4J4fMTbodE0aKBQjJ+2NzBopUAzF9SE="
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    # via the "travis encrypt" command using the project repo's public key
+    #
+    # COVERITY_SCAN_TOKEN
+    # ** specific to your project **
+    # Note:
+    #   You should have a github account and travis linked travis account.
+    #   To generate the proper encrypted token you need to install ruby-dev
+    #   and gem_install travis as follows:
+    #   % sudo apt-get install ruby-dev
+    #   % sudo gem install travis
+    #   then run:
+    #   % travis encrypt  -r <you>/<proj> encrypt COVERITY_SCAN_TOKEN=<token>
+    #       where <you> is your github login
+    #       where <proj> is your github repo, e.g. "odp"
+    #       where <token> is the "Project Token" found on the coverity web page:
+    #       https://scan.coverity.com/dashboard -> <you>/<proj> -> Project_settings
+    #   e.g.:
+    #   % travis encrypt  -r mfrade/CryptoExamples encrypt  COVERITY_SCAN_TOKEN="<token>"
+    # The output string, about 700 characters long, should placed below:
+   
+   - secure: "fpZYVz79O9yC78u6wcX0WZ1KC7b8qIokaxw/f/5idn7Aq+jpnudpWljXAkDLw1VxVkM8AOJOIR7pbZMgzo2Ffe80aa3fYz5EUyHJmYsebjI4zpsWwmieR5wp0mFB9WiXVLmwiDg5xrNI3MA2aQACVFNt2oj2CPdR1dkOt4Vbh6IZQDotyt1xUEwMyjz3xQjC18CRPHnBZ5pgS9hfoA4u5yJcrPcgN71KvOy/hvY7Oz9Ajz4TOUzNNCSLZkD0VJ7xOD0NOhgLL+eU4Cxv42jS0SoRHUkIkJDkc/bUsmbjRdEVt7DsJQr2V3svLhS3hNZ70T3TXJ72SgGMCtuMWhbQri2rWsByRuK0ZD2xQ55cGou5obOknKnA1Oe14is12XGzWLoFbZWbIrNsi4b/nPRRYDxsxW/7yOWWwiCMJTDzrkzdpscX2hB0GEGmGKWkh0wztvAbCk2DZmKmcH1KpigPDwGsnAMLzlCUW3taxYaTL95eQQ1/hd/EW5DCVsbEpXSrmbJzlfN0DGWTe/IVCYJTzYA+7rLBwY3hNTaguq08S5N+g7MZXquv8CArHmfW3lAF6uJ9ml7lLzOEFw9vaaMshPnGcuHuO+W9fJ3B/uTERnXZZPvlOpic7M4UsYtvvcha/J3LveKfNG7LImr+gc0W++g6Vaetf6H+IwR6FGne/vo="
 
 before_install:
   - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
