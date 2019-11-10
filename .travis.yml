@@ -43,8 +43,8 @@ addons:
         notification_email: miguel.frade@ipleiria.pt
         build_command_prepend: ""
         build_command: "make"
-        #branch_pattern: coverity_scan
-        branch_pattern: master
+        branch_pattern: coverity_scan
+        #branch_pattern: master
 
 script:
     - make
