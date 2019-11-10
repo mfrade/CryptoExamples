@@ -96,8 +96,9 @@ decrypt(FILE *fp_s, FILE *fp_t, const char *password)
     
     
     // read the salt and the header from the file
-    if(fread((void *)&sh, 1, sizeof sh, fp_s)==0){
-        ERROR(1, "Reading salt and headre from source file");
+    rlen = fread((void *)&sh, 1, sizeof sh, fp_s);
+    if(rlen == 0){
+        ERROR(1, "Reading salt and header from source file");
     }
     
     if (crypto_pwhash(key, sizeof key, password, strlen(password), sh.salt, 
